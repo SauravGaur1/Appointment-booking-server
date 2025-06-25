@@ -8,8 +8,8 @@ module.exports = {
       host: process.env.HOST,
     },
     production: {
-      port: 80,
-      host: "0.0.0.0",
+      port: process.env.PORT,
+      host: process.env.PROD_HOST,
     },
   },
   encryption: {
