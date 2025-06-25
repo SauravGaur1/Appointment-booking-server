@@ -2,7 +2,7 @@ require("dotenv").config();
 
 module.exports = {
   enviornment: {
-    active: "development",
+    active: process.env.NODE_ENV || "development",
     development: {
       port: process.env.PORT,
       host: process.env.HOST,
