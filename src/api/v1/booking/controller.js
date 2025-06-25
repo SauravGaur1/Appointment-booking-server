@@ -50,7 +50,11 @@ const bookSlot = async (req, res) => {
 const getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ professionalId: req.user.id })
-      .populate('slotId')
+      .populate({
+        path: 'slotId',
+        select: 'date startTime endTime status',
+        options: { sort: { date: 1, startTime: 1 } }
+      })
       .populate('userId', 'name email');
     return sendSuccessResp(res, {
       status: 200,
@@ -64,4 +68,26 @@ const getMyBookings = async (req, res) => {
   }
 };
 
-module.exports = { bookSlot, getMyBookings };
+// Get My Bookings (as Client)
+const getMyBookingsAsClient = async (req, res) => {
+  try {
+    const bookings = await Booking.find({ userId: req.user.id })
+      .populate({
+        path: 'slotId',
+        select: 'date startTime endTime status',
+        options: { sort: { date: 1, startTime: 1 } }
+      })
+      .populate('professionalId', 'name email');
+    return sendSuccessResp(res, {
+      status: 200,
+      data: bookings,
+    });
+  } catch (err) {
+    return sendFailureResp(res, {
+      status: 500,
+      data: { message: err.message },
+    });
+  }
+};
+
+module.exports = { bookSlot, getMyBookings, getMyBookingsAsClient };

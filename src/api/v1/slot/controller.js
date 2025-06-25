@@ -6,6 +6,22 @@ const { sendSuccessResp, sendFailureResp } = require('../../../utils/response');
 const createSlot = async (req, res) => {
   try {
     const { date, startTime, endTime } = req.body;
+
+    // Check for overlapping slots
+    const overlap = await Slot.findOne({
+      ownerId: req.user.id,
+      date,
+      $or: [
+        { startTime: { $lt: new Date(endTime) }, endTime: { $gt: new Date(startTime) } }
+      ]
+    });
+    if (overlap) {
+      return sendFailureResp(res, {
+        status: 400,
+        data: { message: 'Slot overlaps with an existing slot.' },
+      });
+    }
+
     const slot = await Slot.create({
       ownerId: req.user.id,
       date,
@@ -28,7 +44,8 @@ const createSlot = async (req, res) => {
 // Get My Slots
 const getMySlots = async (req, res) => {
   try {
-    const slots = await Slot.find({ ownerId: req.user.id });
+    const slots = await Slot.find({ ownerId: req.user.id })
+      .sort({ date: 1, startTime: 1 });
     return sendSuccessResp(res, {
       status: 200,
       data: slots,
@@ -74,12 +91,17 @@ const getPublicProfileAndSlots = async (req, res) => {
         data: { message: 'User not found' },
       });
     }
-    const slots = await Slot.find({ ownerId: userId }).select('startTime date endTime status');
+    // Find and sort slots by date and startTime ascending
+    const slots = await Slot.find({ ownerId: userId, status: 'available' })
+      .select('date startTime endTime status')
+      .sort({ date: 1, startTime: 1 })
+      .lean();
+
     return sendSuccessResp(res, {
       status: 200,
       data: {
         user,
-        slots,
+        slots, // This is now a sorted array
       },
     });
   } catch (err) {
