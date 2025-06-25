@@ -19,6 +19,9 @@ module.exports = {
     development: {
       connectionStr: process.env.MONGODB_URI
     },
+    production: {
+      connectionStr: process.env.MONGODB_URI
+    }
   },
   jsonWebToken: {
     secretKey: process.env.JWT_SECRET,
